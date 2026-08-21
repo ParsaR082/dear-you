@@ -1,69 +1,154 @@
-import Image from "next/image";
+import Link from "next/link";
+
+const features = [
+  {
+    number: "01",
+    title: "A private space",
+    description:
+      "A quiet little corner of the internet, created just for one special person.",
+  },
+  {
+    number: "02",
+    title: "A message every day",
+    description:
+      "A new thought, memory, or feeling waiting to be discovered each day.",
+  },
+  {
+    number: "03",
+    title: "Made with intention",
+    description:
+      "Every word is written with care, kept safe, and meant only for you.",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <main className="site-shell">
+      <div className="background-glow background-glow-one" />
+      <div className="background-glow background-glow-two" />
+      <div className="noise-layer" />
+
+      <nav className="navbar">
+        <Link href="/" className="brand">
+          <span className="brand-mark">✦</span>
+          <span>dear you</span>
+        </Link>
+
+        <Link href="/login" className="nav-link">
+          Enter private space
+          <span className="arrow">↗</span>
+        </Link>
+      </nav>
+
+      <section className="hero-section">
+        <div className="hero-copy">
+          <div className="eyebrow">
+            <span className="eyebrow-line" />
+            <span>A little place made for you</span>
+          </div>
+
+          <h1>
+            Some things are
+            <span className="italic-line"> worth waiting for.</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+
+          <p className="hero-description">
+            A private collection of daily messages, gentle thoughts, and little
+            reminders created especially for you.
           </p>
+
+          <div className="hero-actions">
+            <Link href="/login" className="primary-button">
+              <span>Open your messages</span>
+              <span className="button-icon">↗</span>
+            </Link>
+
+            <a href="#story" className="text-button">
+              Discover the story
+              <span>↓</span>
+            </a>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="hero-visual" aria-hidden="true">
+          <div className="orbit orbit-one" />
+          <div className="orbit orbit-two" />
+
+          <div className="message-card">
+            <div className="card-top">
+              <span className="card-label">TODAY&apos;S NOTE</span>
+              <span className="card-date">08.20.26</span>
+            </div>
+
+            <div className="card-content">
+              <span className="quote-mark">“</span>
+              <p>
+                You are allowed to take your time. Beautiful things are rarely
+                rushed.
+              </p>
+            </div>
+
+            <div className="card-bottom">
+              <span className="card-line" />
+              <span className="card-heart">♡</span>
+            </div>
+          </div>
+
+          <div className="floating-star star-one">✦</div>
+          <div className="floating-star star-two">✧</div>
+          <div className="floating-star star-three">·</div>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section id="story" className="intro-section">
+        <div className="section-heading">
+          <span className="section-kicker">THE IDEA</span>
+          <h2>
+            One small message.
+            <br />
+            <span>A meaningful moment.</span>
+          </h2>
+        </div>
+
+        <p className="intro-text">
+          Not everything needs to be loud. Sometimes, a few carefully chosen
+          words can turn an ordinary day into something unforgettable.
+        </p>
+      </section>
+
+      <section className="features-section">
+        {features.map((feature) => (
+          <article className="feature-item" key={feature.number}>
+            <span className="feature-number">{feature.number}</span>
+            <div>
+              <h3>{feature.title}</h3>
+              <p>{feature.description}</p>
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <section className="closing-section">
+        <div className="closing-symbol">✦</div>
+
+        <p className="closing-kicker">WHEN YOU&apos;RE READY</p>
+
+        <h2>
+          There&apos;s something
+          <br />
+          waiting for you.
+        </h2>
+
+        <Link href="/login" className="primary-button">
+          <span>Enter your private space</span>
+          <span className="button-icon">↗</span>
+        </Link>
+      </section>
+
+      <footer className="footer">
+        <span>© 2026 dear you</span>
+        <span>Made with intention</span>
+      </footer>
+    </main>
   );
 }
