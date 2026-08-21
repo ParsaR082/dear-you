@@ -1,6 +1,13 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
+
 import { createClient } from "@/lib/supabase/server";
+import {
+  getTodayMessage,
+  getMessages,
+} from "@/lib/messages/server";
+
+import MessageEditor from "./MessageEditor";
+import MessageHistory from "./MessageHistory";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -13,54 +20,58 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "writer") {
+    redirect("/");
+  }
+
+  const todayMessage = await getTodayMessage();
+  const messages = await getMessages();
+
   return (
-    <main className="dashboard-page">
-      <div className="dashboard-glow dashboard-glow-one" />
-      <div className="dashboard-glow dashboard-glow-two" />
-      <div className="noise-layer" />
+    <main
+      style={{
+        minHeight: "100vh",
+        padding: "40px 20px",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "800px",
+          margin: "0 auto",
+        }}
+      >
+        <header
+          style={{
+            marginBottom: "40px",
+          }}
+        >
+          <p>Dear You</p>
 
-      <header className="dashboard-header">
-        <Link href="/" className="brand">
-          <span className="brand-mark">✦</span>
-          <span>dear you</span>
-        </Link>
+          <h1>
+            Today's message
+          </h1>
 
-        <form action="/auth/signout" method="post">
-          <button type="submit" className="dashboard-signout">
-            Sign out
-            <span>↗</span>
-          </button>
-        </form>
-      </header>
+          <p>
+            Write something for her today.
+          </p>
+        </header>
 
-      <section className="dashboard-content">
-        <div className="eyebrow">
-          <span className="eyebrow-line" />
-          <span>Your private space</span>
-        </div>
+        <section>
+          <MessageEditor
+            initialMessage={todayMessage?.message ?? ""}
+          />
+        </section>
 
-        <h1>
-          Hello,
-          <span> {user.email?.split("@")[0] || "you"}.</span>
-        </h1>
-
-        <p className="dashboard-description">
-          Your first message is waiting to be written here.
-        </p>
-
-        <div className="empty-message-card">
-          <span className="empty-card-label">YOUR COLLECTION</span>
-
-          <div className="empty-card-center">
-            <span className="empty-card-symbol">✦</span>
-            <h2>Something gentle is coming.</h2>
-            <p>
-              This is where your private messages, memories, and little
-              reminders will appear.
-            </p>
-          </div>
-        </div>
-      </section>
+        <MessageHistory
+          messages={messages}
+        />
+      </div>
     </main>
   );
 }
