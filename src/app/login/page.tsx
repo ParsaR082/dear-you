@@ -2,24 +2,52 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const supabase = createClient();
+
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!email || !password) {
+    setMessage("");
+
+    if (!email.trim() || !password) {
       setMessage("Please enter both your email and password.");
       return;
     }
 
-    setMessage(
-      "Your private space is being prepared. Account connection comes next.",
-    );
+    setIsLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (error) {
+      setMessage("The email or password is incorrect.");
+      setIsLoading(false);
+      return;
+    }
+
+    const redirectPath = searchParams.get("redirectedFrom");
+
+    if (redirectPath?.startsWith("/")) {
+      router.replace(redirectPath);
+    } else {
+      router.replace("/dashboard");
+    }
+
+    router.refresh();
   }
 
   return (
@@ -78,6 +106,7 @@ export default function LoginPage() {
           <form className="login-form" onSubmit={handleSubmit}>
             <div className="input-group">
               <label htmlFor="email">Email address</label>
+
               <input
                 id="email"
                 name="email"
@@ -86,6 +115,7 @@ export default function LoginPage() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
+                disabled={isLoading}
               />
             </div>
 
@@ -97,6 +127,7 @@ export default function LoginPage() {
                   type="button"
                   className="show-password-button"
                   onClick={() => setShowPassword((current) => !current)}
+                  disabled={isLoading}
                 >
                   {showPassword ? "Hide" : "Show"}
                 </button>
@@ -110,16 +141,21 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                disabled={isLoading}
               />
             </div>
 
-            <button type="submit" className="login-submit">
-              <span>Continue</span>
-              <span className="button-icon">↗</span>
+            <button
+              type="submit"
+              className="login-submit"
+              disabled={isLoading}
+            >
+              <span>{isLoading ? "Opening..." : "Continue"}</span>
+              <span className="button-icon">{isLoading ? "…" : "↗"}</span>
             </button>
 
             {message && (
-              <p className="form-message" role="status">
+              <p className="form-message" role="alert">
                 {message}
               </p>
             )}
