@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import {
@@ -118,13 +119,21 @@ export default async function ReaderPage({ searchParams }: ReaderPageProps) {
       return;
     }
 
-    await readerClient.rpc("mark_message_read", { p_message_id: messageId });
+    const { error } = await readerClient.rpc("mark_message_read", {
+      p_message_id: messageId,
+    });
+
+    if (error) {
+      throw new Error("The note could not be opened. Please try again.");
+    }
+
+    revalidatePath("/read");
   }
 
-  const isToday = selectedDate === appDate;
-  const needsOpen = Boolean(message && isToday && !message.read_at);
+  const needsOpen = Boolean(message && !message.read_at);
   const pastMessages = messages.filter((item) => item.message_date !== selectedDate);
   const formattedDate = message ? formatMessageDate(message.message_date) : null;
+  const isToday = selectedDate === appDate;
 
   return (
     <main className="reader-shell">
@@ -144,7 +153,7 @@ export default async function ReaderPage({ searchParams }: ReaderPageProps) {
       </header>
 
       <section className="reader-main">
-        <div className="reader-kicker">A note for you</div>
+        <div className="reader-kicker">{isToday ? "A note for today" : "A note left for you"}</div>
 
         <h1 className="reader-title">
           Something <em>quietly written.</em>
@@ -161,21 +170,25 @@ export default async function ReaderPage({ searchParams }: ReaderPageProps) {
                 There isn&apos;t a note waiting here yet. Some things are worth
                 waiting for.
               </p>
-              <p style={{ marginTop: "1.4rem" }}>
-                <Link href="/read" style={{ color: "#efa5c8" }}>Back to today ↗</Link>
-              </p>
+              {!isToday && (
+                <p style={{ marginTop: "1.4rem" }}>
+                  <Link href="/read" style={{ color: "#efa5c8" }}>Back to today ↗</Link>
+                </p>
+              )}
             </section>
           ) : needsOpen ? (
             <section className="reader-gate">
               <div className="reader-seal" aria-hidden="true">✦</div>
-              <h1>Someone left you a little something.</h1>
+              <h1>{isToday ? "Someone left you a little something." : "A little something was left here."}</h1>
               <p>
-                It was written for today, and it is waiting to be opened.
+                {isToday
+                  ? "It was written for today, and it is waiting to be opened."
+                  : "It is still waiting for its first visit."}
               </p>
               <form action={markMessageRead}>
                 <input type="hidden" name="messageId" value={message.id} />
                 <button className="reader-open-button" type="submit">
-                  <span>Open today&apos;s letter</span>
+                  <span>{isToday ? "Open today&apos;s letter" : "Open this letter"}</span>
                   <span className="reader-open-icon">↗</span>
                 </button>
               </form>
