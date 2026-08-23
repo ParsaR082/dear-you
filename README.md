@@ -1,36 +1,111 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# dear you
 
-## Getting Started
+> A private little place where one person can leave one message for another, every day.
 
-First, run the development server:
+`Dear You` is a small Next.js + Supabase app built around a single idea: **you write something each day, and one specific person comes back to read it.**
+
+## Stack
+
+- Next.js 16 + React 19 + TypeScript
+- Supabase Auth + PostgreSQL + RLS
+- Server Actions for message writes and read tracking
+- CSS-first visual system with a dark, editorial aesthetic
+
+## Local development
+
+Install dependencies and start the app:
 
 ```bash
+npm ci
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create `.env.local` from `.env.example` and add the Supabase project values.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+APP_TIMEZONE=Asia/Tehran
+```
 
-## Learn More
+`APP_TIMEZONE` controls the boundary of a Dear You day. Set it explicitly for production so the writer and reader always agree on what "today" means.
 
-To learn more about Next.js, take a look at the following resources:
+## Supabase setup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The original project schema creates `profiles` and `messages`. The current app additionally needs the migration in:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+supabase/001_daily_read_state.sql
+```
 
-## Deploy on Vercel
+Run that file in **Supabase → SQL Editor** after the original schema. It adds:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `messages.read_at`
+- strict message RLS policies
+- a secure `mark_message_read(uuid)` RPC
+- an index for read-state lookups
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The designated reader account must have:
+
+```text
+role = reader
+is_recipient = true
+```
+
+The writer account must have:
+
+```text
+role = writer
+is_recipient = false
+```
+
+## Routes
+
+```text
+/              Public landing page
+/login         Supabase login
+/dashboard     Writer-only space
+/read          Reader-only daily letter
+/read?date=... Reader archive entry
+```
+
+## Product behavior
+
+### Writer
+
+The writer can:
+
+- create or edit today's message
+- see the full archive
+- see whether each message has been opened
+- see the time a message was first opened
+
+Editing today's note resets its `read_at` value, so a revised message is treated as a fresh note.
+
+### Reader
+
+The designated reader can:
+
+- open today's sealed note
+- have the open recorded securely in the database
+- revisit older notes from the private archive
+- never write or edit messages
+
+An unread note is intentionally presented as a small "sealed" experience instead of exposing the text immediately.
+
+## Production verification
+
+Run:
+
+```bash
+npm run lint
+npm run build
+```
+
+GitHub Actions runs both checks for pushes and pull requests targeting `main`.
+
+## Security notes
+
+The browser never receives a service-role key. Supabase access is performed through the publishable client plus PostgreSQL RLS. Reader read-tracking is handled by a narrowly scoped `SECURITY DEFINER` function rather than granting the reader permission to update message rows directly.
