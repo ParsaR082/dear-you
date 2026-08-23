@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { formatMessageDate, getAppDate } from "@/lib/messages/server";
+
 const features = [
   {
     number: "01",
@@ -22,6 +24,8 @@ const features = [
 ];
 
 export default function Home() {
+  const todayLabel = formatMessageDate(getAppDate()).toUpperCase();
+
   return (
     <main className="site-shell">
       <div className="background-glow background-glow-one" />
@@ -77,7 +81,7 @@ export default function Home() {
           <div className="message-card">
             <div className="card-top">
               <span className="card-label">TODAY&apos;S NOTE</span>
-              <span className="card-date">08.20.26</span>
+              <span className="card-date">{todayLabel}</span>
             </div>
 
             <div className="card-content">
