@@ -27,13 +27,31 @@ export default function MessageHistory({ messages }: Props) {
         <div className="message-history-list">
           {messages.map((message) => (
             <article className="message-history-item" key={message.id}>
-              <div className="message-history-item-head">
-                <time className="message-history-date">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "1rem",
+                  marginBottom: "0.7rem",
+                }}
+              >
+                <time className="message-history-date" style={{ marginBottom: 0 }}>
                   {formatMessageDate(message.message_date)}
                 </time>
 
                 <span
-                  className={`message-read-state ${message.read_at ? "is-read" : "is-unread"}`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.35rem",
+                    color: message.read_at ? "#9edab8" : "#efa5c8",
+                    fontFamily: '"DM Mono", monospace',
+                    fontSize: "0.57rem",
+                    letterSpacing: "0.08em",
+                    textTransform: "uppercase",
+                    whiteSpace: "nowrap",
+                  }}
                 >
                   <span aria-hidden="true">{message.read_at ? "✓" : "○"}</span>
                   {message.read_at ? "Read" : "Waiting"}
@@ -43,7 +61,7 @@ export default function MessageHistory({ messages }: Props) {
               <p className="message-history-text">{message.message}</p>
 
               {message.read_at && (
-                <p className="message-read-time">
+                <p className="editor-hint" style={{ marginTop: "0.75rem" }}>
                   Opened {formatOpenedAt(message.read_at)}
                 </p>
               )}
