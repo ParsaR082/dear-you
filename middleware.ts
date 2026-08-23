@@ -2,9 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request,
-  });
+  let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,9 +17,7 @@ export async function middleware(request: NextRequest) {
             request.cookies.set(name, value);
           });
 
-          response = NextResponse.next({
-            request,
-          });
+          response = NextResponse.next({ request });
 
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
@@ -35,23 +31,24 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isDashboardRoute = request.nextUrl.pathname.startsWith("/dashboard");
-  const isLoginRoute = request.nextUrl.pathname === "/login";
+  const pathname = request.nextUrl.pathname;
+  const isDashboardRoute = pathname.startsWith("/dashboard");
+  const isReaderRoute = pathname.startsWith("/read");
+  const isLoginRoute = pathname === "/login";
 
-  if (isDashboardRoute && !user) {
+  if ((isDashboardRoute || isReaderRoute) && !user) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
-    loginUrl.searchParams.set("redirectedFrom", request.nextUrl.pathname);
+    loginUrl.search = "";
+    loginUrl.searchParams.set("redirectedFrom", pathname);
 
     return NextResponse.redirect(loginUrl);
   }
 
+  // Let the login page decide where an already-authenticated user belongs.
+  // This prevents the middleware from blindly sending readers to /dashboard.
   if (isLoginRoute && user) {
-    const dashboardUrl = request.nextUrl.clone();
-    dashboardUrl.pathname = "/dashboard";
-    dashboardUrl.search = "";
-
-    return NextResponse.redirect(dashboardUrl);
+    return response;
   }
 
   return response;
@@ -60,10 +57,8 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
+    "/read/:path*",
     "/login",
-    /*
-     * فایل‌های داخلی Next.js و فایل‌های استاتیک را نادیده می‌گیریم.
-     */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
