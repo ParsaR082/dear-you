@@ -18,7 +18,6 @@ export default function LoginPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
     setMessage("");
 
     if (!email.trim() || !password) {
@@ -28,23 +27,48 @@ export default function LoginPage() {
 
     setIsLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
 
-    if (error) {
+    if (error || !data.user) {
       setMessage("The email or password is incorrect.");
+      setIsLoading(false);
+      return;
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, is_recipient")
+      .eq("id", data.user.id)
+      .single();
+
+    if (profileError || !profile) {
+      setMessage("Your account could not be verified.");
       setIsLoading(false);
       return;
     }
 
     const redirectPath = searchParams.get("redirectedFrom");
 
-    if (redirectPath?.startsWith("/")) {
-      router.replace(redirectPath);
+    if (profile.role === "writer") {
+      if (redirectPath === "/dashboard" || redirectPath?.startsWith("/dashboard/")) {
+        router.replace(redirectPath);
+      } else {
+        router.replace("/dashboard");
+      }
+    } else if (profile.role === "reader" && profile.is_recipient === true) {
+      if (redirectPath === "/read" || redirectPath?.startsWith("/read/")) {
+        router.replace(redirectPath);
+      } else {
+        router.replace("/read");
+      }
     } else {
-      router.replace("/dashboard");
+      await supabase.auth.signOut();
+      setMessage("This account does not have a valid Dear You role.");
+      setIsLoading(false);
+      return;
     }
 
     router.refresh();
@@ -106,7 +130,6 @@ export default function LoginPage() {
           <form className="login-form" onSubmit={handleSubmit}>
             <div className="input-group">
               <label htmlFor="email">Email address</label>
-
               <input
                 id="email"
                 name="email"
@@ -122,7 +145,6 @@ export default function LoginPage() {
             <div className="input-group">
               <div className="password-label-row">
                 <label htmlFor="password">Password</label>
-
                 <button
                   type="button"
                   className="show-password-button"
