@@ -2,11 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getAppDate } from "@/lib/messages/server";
+
+const MAX_MESSAGE_LENGTH = 5000;
 
 export async function saveTodayMessage(formData: FormData) {
   const supabase = await createClient();
 
-  // Make sure the user is authenticated
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -15,7 +17,6 @@ export async function saveTodayMessage(formData: FormData) {
     throw new Error("Unauthorized");
   }
 
-  // Check user role
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("role")
@@ -26,15 +27,18 @@ export async function saveTodayMessage(formData: FormData) {
     throw new Error("You are not allowed to write messages.");
   }
 
-  const message = formData.get("message")?.toString().trim();
+  const message = formData.get("message")?.toString().trim() ?? "";
 
   if (!message) {
     throw new Error("Message cannot be empty.");
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    throw new Error(`Message cannot exceed ${MAX_MESSAGE_LENGTH} characters.`);
+  }
 
-  // Check if today's message already exists
+  const today = getAppDate();
+
   const { data: existingMessage, error: existingError } = await supabase
     .from("messages")
     .select("id")
@@ -50,6 +54,9 @@ export async function saveTodayMessage(formData: FormData) {
       .from("messages")
       .update({
         message,
+        // A meaningful edit creates a fresh daily note. The read timestamp is
+        // intentionally reset because the reader should encounter the edited note.
+        read_at: null,
       })
       .eq("id", existingMessage.id);
 
@@ -57,12 +64,10 @@ export async function saveTodayMessage(formData: FormData) {
       throw new Error("Failed to update today's message.");
     }
   } else {
-    const { error } = await supabase
-      .from("messages")
-      .insert({
-        message,
-        message_date: today,
-      });
+    const { error } = await supabase.from("messages").insert({
+      message,
+      message_date: today,
+    });
 
     if (error) {
       throw new Error("Failed to create today's message.");
@@ -70,4 +75,5 @@ export async function saveTodayMessage(formData: FormData) {
   }
 
   revalidatePath("/dashboard");
+  revalidatePath("/read");
 }
