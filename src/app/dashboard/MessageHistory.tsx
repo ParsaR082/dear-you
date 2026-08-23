@@ -12,74 +12,33 @@ type Props = {
 
 export default function MessageHistory({ messages }: Props) {
   return (
-    <section
-      style={{
-        marginTop: "60px",
-      }}
-    >
-      <div
-        style={{
-          marginBottom: "24px",
-        }}
-      >
-        <p
-          style={{
-            opacity: 0.5,
-            fontSize: "13px",
-            textTransform: "uppercase",
-            letterSpacing: "0.15em",
-          }}
-        >
-          Archive
-        </p>
-
-        <h2>
-          Previous messages
-        </h2>
+    <section className="message-history">
+      <div className="message-history-heading">
+        <div>
+          <span className="message-history-kicker">ARCHIVE</span>
+          <h2>What you've written.</h2>
+        </div>
+        <span className="message-history-kicker">
+          {messages.length} {messages.length === 1 ? "note" : "notes"}
+        </span>
       </div>
 
       {messages.length === 0 ? (
-        <p style={{ opacity: 0.5 }}>
-          No messages yet.
-        </p>
+        <div className="message-history-empty">
+          Nothing here yet. Today's note will become the first page of the
+          archive.
+        </div>
       ) : (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "12px",
-          }}
-        >
+        <div className="message-history-list">
           {messages.map((message) => (
-            <article
-              key={message.id}
-              style={{
-                padding: "20px",
-                borderRadius: "12px",
-                border: "1px solid rgba(255,255,255,0.08)",
-                background: "rgba(255,255,255,0.02)",
-              }}
-            >
-              <time
-                style={{
-                  display: "block",
-                  marginBottom: "10px",
-                  opacity: 0.45,
-                  fontSize: "13px",
-                }}
-              >
-                {message.message_date}
+            <article className="message-history-item" key={message.id}>
+              <time className="message-history-date">
+                {new Intl.DateTimeFormat("en", {
+                  dateStyle: "long",
+                  timeZone: "UTC",
+                }).format(new Date(`${message.message_date}T00:00:00Z`))}
               </time>
-
-              <p
-                style={{
-                  whiteSpace: "pre-wrap",
-                  lineHeight: "1.8",
-                  margin: 0,
-                }}
-              >
-                {message.message}
-              </p>
+              <p className="message-history-text">{message.message}</p>
             </article>
           ))}
         </div>
