@@ -2,7 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
-import { getMessages, getTodayMessage } from "@/lib/messages/server";
+import {
+  formatMessageDate,
+  getMessages,
+  getTodayMessage,
+} from "@/lib/messages/server";
 
 import MessageEditor from "./MessageEditor";
 import MessageHistory from "./MessageHistory";
@@ -34,6 +38,7 @@ export default async function DashboardPage() {
   ]);
 
   const totalMessages = messages.length;
+  const isRead = Boolean(todayMessage?.read_at);
 
   return (
     <main className="dashboard-page">
@@ -58,7 +63,7 @@ export default async function DashboardPage() {
       <section className="dashboard-content">
         <div className="eyebrow">
           <span className="eyebrow-line" />
-          <span>Writer's space</span>
+          <span>Writer&apos;s space</span>
         </div>
 
         <h1>
@@ -67,8 +72,8 @@ export default async function DashboardPage() {
         </h1>
 
         <p className="dashboard-description">
-          One message. One day. Something she can come back to whenever she
-          needs it.
+          One message. One day. A small piece of you waiting for her whenever
+          she comes back.
         </p>
 
         <div className="dashboard-stats" aria-label="Message statistics">
@@ -77,12 +82,25 @@ export default async function DashboardPage() {
             <strong>{totalMessages}</strong>
             <span>{totalMessages === 1 ? "message" : "messages"} written</span>
           </div>
+
           <div>
             <span className="dashboard-stat-label">TODAY</span>
-            <strong>{todayMessage ? "READY" : "OPEN"}</strong>
-            <span>{todayMessage ? "your note is waiting" : "write her a note"}</span>
+            <strong>{todayMessage ? (isRead ? "READ" : "WAITING") : "OPEN"}</strong>
+            <span>
+              {todayMessage
+                ? isRead
+                  ? "she has opened your note"
+                  : "your note is waiting for her"
+                : "write her a note"}
+            </span>
           </div>
         </div>
+
+        {todayMessage && (
+          <p className="dashboard-today-meta">
+            Today&apos;s note · {formatMessageDate(todayMessage.message_date)}
+          </p>
+        )}
 
         <MessageEditor initialMessage={todayMessage?.message ?? ""} />
 
