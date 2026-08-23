@@ -97,7 +97,16 @@ export default async function DashboardPage() {
         </div>
 
         {todayMessage && (
-          <p className="dashboard-today-meta">
+          <p
+            style={{
+              margin: "0 0 1.5rem",
+              color: "var(--muted)",
+              fontFamily: '"DM Mono", monospace',
+              fontSize: "0.63rem",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+            }}
+          >
             Today&apos;s note · {formatMessageDate(todayMessage.message_date)}
           </p>
         )}
