@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { saveTodayMessage } from "./actions";
 
 type Props = {
@@ -8,8 +8,6 @@ type Props = {
 };
 
 export default function MessageEditor({ initialMessage }: Props) {
-  const formRef = useRef<HTMLFormElement>(null);
-
   const [message, setMessage] = useState(initialMessage);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -22,79 +20,56 @@ export default function MessageEditor({ initialMessage }: Props) {
 
     try {
       await saveTodayMessage(formData);
-
       setSaved(true);
-
-      setTimeout(() => {
-        setSaved(false);
-      }, 3000);
+      window.setTimeout(() => setSaved(false), 3000);
     } catch (error) {
       setError(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong."
+        error instanceof Error ? error.message : "Something went wrong.",
       );
     } finally {
       setSaving(false);
     }
   }
 
+  const canSave = message.trim().length > 0 && !saving;
+
   return (
-    <form
-      ref={formRef}
-      action={handleSubmit}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "16px",
-      }}
-    >
+    <form className="message-editor" action={handleSubmit}>
+      <div className="message-editor-header">
+        <div>
+          <span className="dashboard-kicker">TODAY</span>
+          <h2>Write her something.</h2>
+        </div>
+        <span className="message-count">{message.length} chars</span>
+      </div>
+
       <textarea
         name="message"
         value={message}
         onChange={(event) => setMessage(event.target.value)}
-        placeholder="Write something for her..."
+        placeholder="Tell her something you want her to remember today..."
         rows={12}
+        maxLength={5000}
         required
-        style={{
-          width: "100%",
-          padding: "20px",
-          resize: "vertical",
-          borderRadius: "12px",
-          border: "1px solid rgba(255,255,255,0.1)",
-          background: "rgba(255,255,255,0.03)",
-          color: "white",
-          fontSize: "16px",
-          lineHeight: "1.8",
-          outline: "none",
-        }}
+        aria-label="Today's message"
+        disabled={saving}
       />
 
-      <button
-        type="submit"
-        disabled={saving || !message.trim()}
-        style={{
-          padding: "14px 24px",
-          borderRadius: "10px",
-          border: "none",
-          cursor: saving ? "wait" : "pointer",
-          opacity: saving || !message.trim() ? 0.6 : 1,
-        }}
-      >
-        {saving ? "Saving..." : "Save today's message"}
-      </button>
-
-      {saved && (
-        <p>
-          ✓ Today's message has been saved.
+      <div className="message-editor-footer">
+        <p className="editor-hint">
+          This message will be the note waiting for her today.
         </p>
-      )}
 
-      {error && (
-        <p>
-          {error}
-        </p>
-      )}
+        <button type="submit" className="dashboard-primary-button" disabled={!canSave}>
+          <span>{saving ? "Saving..." : "Save today's message"}</span>
+          <span className="button-icon">{saving ? "…" : "↗"}</span>
+        </button>
+      </div>
+
+      <div className="editor-status" aria-live="polite">
+        {saved && <span className="success-message">✓ Saved for today.</span>}
+        {error && <span className="error-message">{error}</span>}
+      </div>
     </form>
   );
 }
