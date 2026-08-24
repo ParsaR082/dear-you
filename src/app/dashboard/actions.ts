@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getAppDate } from "@/lib/messages/server";
+import { formatMessageDate, getAppDate } from "@/lib/messages/server";
+import { sendNewMessageNotification } from "@/lib/email/server";
 
 const MAX_MESSAGE_LENGTH = 5000;
 
@@ -49,13 +50,13 @@ export async function saveTodayMessage(formData: FormData) {
     throw new Error("Failed to check today's message.");
   }
 
+  const isNewMessage = !existingMessage;
+
   if (existingMessage) {
     const { error } = await supabase
       .from("messages")
       .update({
         message,
-        // A meaningful edit creates a fresh daily note. The read timestamp is
-        // intentionally reset because the reader should encounter the edited note.
         read_at: null,
       })
       .eq("id", existingMessage.id);
@@ -71,6 +72,29 @@ export async function saveTodayMessage(formData: FormData) {
 
     if (error) {
       throw new Error("Failed to create today's message.");
+    }
+  }
+
+  // Email is intentionally best-effort. The message is already safely stored;
+  // an email provider outage must never make the writer lose today's note.
+  if (isNewMessage) {
+    const recipient = process.env.RECIPIENT_EMAIL;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+    if (recipient && appUrl) {
+      try {
+        await sendNewMessageNotification({
+          recipient,
+          appUrl,
+          messageDate: formatMessageDate(today),
+        });
+      } catch (error) {
+        console.error("Dear You email notification failed:", error);
+      }
+    } else {
+      console.warn(
+        "Email notification skipped: RECIPIENT_EMAIL or NEXT_PUBLIC_APP_URL is not configured.",
+      );
     }
   }
 
